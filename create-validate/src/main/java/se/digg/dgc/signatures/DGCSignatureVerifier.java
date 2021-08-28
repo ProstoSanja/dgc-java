@@ -5,14 +5,14 @@
  */
 package se.digg.dgc.signatures;
 
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.CertificateExpiredException;
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 
 /**
  * An interface for a DCC signature verifier.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
@@ -25,7 +25,7 @@ public interface DGCSignatureVerifier {
    * Note: This method only checks the signature and the validity of the DCC. Any other checks must be done after this
    * method has completed successfully.
    * </p>
-   * 
+   *
    * @param signedCwt
    *          the signed CWT holding the DCC
    * @param certificateProvider
@@ -47,8 +47,8 @@ public interface DGCSignatureVerifier {
     /** The CBOR encoded DGC payload. */
     private final byte[] dgcPayload;
 
-    /** The certificate that was used to verify the signature. */
-    private final X509Certificate signerCertificate;
+    /** The public key that was used to verify the signature. */
+    private final PublicKey signerPublicKey;
 
     /** The key id that was used to locate the signer certificate. */
     private final byte[] kid;
@@ -64,11 +64,11 @@ public interface DGCSignatureVerifier {
 
     /**
      * Constructor.
-     * 
+     *
      * @param dccPayload
      *          the CBOR encoded DCC payload
-     * @param signerCertificate
-     *          the certificate that was used to verify the signature
+     * @param signerPublicKey
+     *          the public key that was used to verify the signature
      * @param kid
      *          he key id that was used to locate the signer certificate
      * @param country
@@ -78,10 +78,10 @@ public interface DGCSignatureVerifier {
      * @param expires
      *          the expiration time of the DCC
      */
-    public Result(final byte[] dccPayload, final X509Certificate signerCertificate,
+    public Result(final byte[] dccPayload, final PublicKey signerPublicKey,
         final byte[] kid, final String country, final Instant issuedAt, final Instant expires) {
       this.dgcPayload = dccPayload;
-      this.signerCertificate = signerCertificate;
+      this.signerPublicKey = signerPublicKey;
       this.kid = kid;
       this.country = country;
       this.issuedAt = issuedAt;
@@ -90,7 +90,7 @@ public interface DGCSignatureVerifier {
 
     /**
      * Gets the CBOR encoded DCC payload.
-     * 
+     *
      * @return the CBOR encoded DCC payload
      */
     public byte[] getDgcPayload() {
@@ -99,16 +99,16 @@ public interface DGCSignatureVerifier {
 
     /**
      * Gets the certificate that was used to verify the signature.
-     * 
+     *
      * @return the certificate used to verify the signature
      */
-    public X509Certificate getSignerCertificate() {
-      return this.signerCertificate;
+    public PublicKey getSignerPublicKey() {
+      return this.signerPublicKey;
     }
 
     /**
      * Gets the key identifier that was used to locate the signer certificate.
-     * 
+     *
      * @return the key identifier
      */
     public byte[] getKid() {
@@ -117,7 +117,7 @@ public interface DGCSignatureVerifier {
 
     /**
      * Gets the ISO-3166 code for the issuing country.
-     * 
+     *
      * @return country code
      */
     public String getCountry() {
@@ -126,7 +126,7 @@ public interface DGCSignatureVerifier {
 
     /**
      * Gets the issuance time of the HCERT.
-     * 
+     *
      * @return issuance time
      */
     public Instant getIssuedAt() {
@@ -135,7 +135,7 @@ public interface DGCSignatureVerifier {
 
     /**
      * Gets the expiration time of the HCERT.
-     * 
+     *
      * @return the expiration time
      */
     public Instant getExpires() {

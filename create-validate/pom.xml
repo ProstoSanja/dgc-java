@@ -2,26 +2,26 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
     <groupId>se.digg.dgc</groupId>
     <artifactId>dgc-parent</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
-  </parent>  
+    <version>1.0.3-PUBCERT</version>
+  </parent>
 
   <artifactId>dgc-create-validate</artifactId>
 
   <name>DIGG :: EU Digital Covid Certificate :: Issuance and Validation</name>
   <description>Issuance and validation of EU Digital Covid Certificates</description>
   <url>https://github.com/diggsweden/dgc-java</url>
-  
+
   <licenses>
     <license>
       <name>MIT License</name>
       <url>http://www.opensource.org/licenses/mit-license.php</url>
       <distribution>repo</distribution>
     </license>
-  </licenses>  
+  </licenses>
 
   <scm>
     <connection>scm:https://github.com/diggsweden/dgc-java.git</connection>
@@ -43,24 +43,24 @@
       <email>extern.henric.norlander@digg.se</email>
     </developer>
   </developers>
-  
+
   <distributionManagement>
     <repository>
       <id>ossrh</id>
       <url>https://s01.oss.sonatype.org/content/groups/staging/</url>
     </repository>
-  </distributionManagement>  
+  </distributionManagement>
 
   <properties>
     <!-- Versions on dependencies -->
     <bouncy-castle.version>1.68</bouncy-castle.version>
-    <xmlsec.version>2.2.1</xmlsec.version>    
+    <xmlsec.version>2.2.1</xmlsec.version>
     <zxing.version>3.4.1</zxing.version>
   </properties>
 
   <dependencies>
-  
-    <!-- 
+
+    <!--
       Note that the dgc-schema dependency has provided-scope.
       The reason for this is that the schema may change more frequently and we don't want
       to hardwire a version dependency to it.
@@ -71,7 +71,7 @@
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
-  
+
     <dependency>
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
@@ -87,11 +87,11 @@
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-cbor</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
-    </dependency>    
+    </dependency>
 
     <!-- CBOR and COSE -->
     <dependency>
@@ -104,7 +104,7 @@
       <artifactId>nimbus-jose-jwt</artifactId>
       <version>8.20.2</version>
     </dependency>
-    
+
     <!-- Barcodes -->
     <dependency>
       <groupId>com.google.zxing</groupId>
@@ -112,7 +112,7 @@
       <version>[${zxing.version},)</version>
       <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
@@ -132,46 +132,46 @@
       <artifactId>bcprov-jdk15on</artifactId>
       <version>${bouncy-castle.version}</version>
     </dependency>
-    
+
     <!-- Include those to make full use of PkiCredentials support -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
       <version>[5.0.0.RELEASE,)</version>
-      <optional>true</optional>  
+      <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
       <version>[5.0.0.RELEASE,)</version>
       <optional>true</optional>
     </dependency>
-            
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <version>[5.0.0.RELEASE,)</version>
       <optional>true</optional>
     </dependency>
-    
+
   </dependencies>
-  
+
   <profiles>
-  
+
     <profile>
       <id>default</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
-      
+
       <properties>
         <java.version>11</java.version>
         <credentials-support.version>1.0.1</credentials-support.version>
       </properties>
-      
+
       <dependencies>
-      
+
         <dependency>
           <groupId>se.swedenconnect.security</groupId>
           <artifactId>credentials-support</artifactId>
@@ -180,7 +180,7 @@
             <exclusion>
               <groupId>org.springframework</groupId>
               <artifactId>spring-core</artifactId>
-            </exclusion>        
+            </exclusion>
             <exclusion>
               <groupId>org.springframework</groupId>
               <artifactId>spring-beans</artifactId>
@@ -191,24 +191,24 @@
             </exclusion>
           </exclusions>
         </dependency>
-                
+
       </dependencies>
-      
-      
-    </profile>  
-  
+
+
+    </profile>
+
     <profile>
       <id>j8-build</id>
-      
+
       <properties>
         <java.version>1.8</java.version>
       </properties>
 
       <build>
         <finalName>${project.artifactId}-java8-${project.version}</finalName>
-        
+
         <plugins>
-        
+
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
@@ -226,11 +226,11 @@
                 </configuration>
               </execution>
             </executions>
-          </plugin>              
-        </plugins>        
+          </plugin>
+        </plugins>
       </build>
-      
-    </profile>  
+
+    </profile>
 
     <profile>
       <id>release</id>
@@ -275,6 +275,6 @@
 
     </profile>
 
-  </profiles>  
+  </profiles>
 
 </project>

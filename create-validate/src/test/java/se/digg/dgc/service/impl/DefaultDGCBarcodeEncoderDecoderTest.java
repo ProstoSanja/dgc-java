@@ -28,13 +28,13 @@ import se.swedenconnect.security.credential.PkiCredential;
 
 /**
  * Test cases for {@link DefaultDGCBarcodeEncoder}.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
  */
 public class DefaultDGCBarcodeEncoderDecoderTest {
-  
+
   private PkiCredential ecdsa;
 
   private static final char[] password = "secret".toCharArray();
@@ -43,35 +43,35 @@ public class DefaultDGCBarcodeEncoderDecoderTest {
     this.ecdsa = new KeyStoreCredential(new ClassPathResource("ecdsa.jks"), password, "signer", password);
     this.ecdsa.init();
   }
-  
+
   @Test
   public void testEncodeDecodeBarcode() throws Exception {
-    
+
     final Instant expire = Instant.now().plus(Duration.ofDays(30));
     final DigitalCovidCertificate dgc = getTestDGC();
-    
+
     final DefaultDGCBarcodeEncoder encoder = new DefaultDGCBarcodeEncoder(new DefaultDGCSigner(this.ecdsa), new DefaultBarcodeCreator());
-    
+
     final Barcode barcode = encoder.encodeToBarcode(dgc, expire);
-    
+
     final DefaultDGCBarcodeDecoder decoder = new DefaultDGCBarcodeDecoder(
-      new DefaultDGCSignatureVerifier(), (x,y) -> Arrays.asList(this.ecdsa.getCertificate()), new DefaultBarcodeDecoder());
-    
+      new DefaultDGCSignatureVerifier(), (x,y) -> Arrays.asList(this.ecdsa.getCertificate().getPublicKey()), new DefaultBarcodeDecoder());
+
     final DigitalCovidCertificate dgc2 = decoder.decodeBarcode(barcode.getImage());
     Assert.assertEquals(dgc, dgc2);
     Assert.assertEquals("KARL<MAARTEN", dgc2.getNam().getGnt());
     Assert.assertEquals("LINDSTROEM", dgc2.getNam().getFnt());
   }
-  
+
   private DigitalCovidCertificate getTestDGC() {
     DigitalCovidCertificate dgc = new DigitalCovidCertificate();
     dgc.setVer("1.0.0");
-    
+
     dgc.setNam(new PersonName().withGn("Karl Mårten").withFn("Lindström"));
     dgc.setDob(LocalDate.parse("1969-11-29"));
-    
-    
-    VaccinationEntry vac = new VaccinationEntry();    
+
+
+    VaccinationEntry vac = new VaccinationEntry();
     vac
       .withCi(UUID.randomUUID().toString())
       .withTg("840539006")
@@ -83,9 +83,9 @@ public class DefaultDGCBarcodeEncoderDecoderTest {
       .withMa("ORG-100001699")
       .withMp("CVnCoV")
       .withVp("1119349007");
-      
+
     dgc.setV(Arrays.asList(vac));
-    
+
     return dgc;
   }
 

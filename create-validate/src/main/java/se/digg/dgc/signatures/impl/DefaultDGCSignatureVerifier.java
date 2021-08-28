@@ -5,9 +5,9 @@
  */
 package se.digg.dgc.signatures.impl;
 
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.CertificateExpiredException;
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.List;
 
@@ -23,7 +23,7 @@ import se.digg.dgc.signatures.cwt.Cwt;
 
 /**
  * Implementation of the {@link DGCSignatureVerifier} interface.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
@@ -55,14 +55,14 @@ public class DefaultDGCSignatureVerifier implements DGCSignatureVerifier {
         throw new SignatureException("Signed object does not contain key identifier or country - cannot find certificate");
       }
 
-      final List<X509Certificate> certs = certificateProvider.getCertificates(country, kid);
+      final List<PublicKey> keys = certificateProvider.getCertificates(country, kid);
 
-      for (final X509Certificate cert : certs) {
-        log.trace("Attempting DCC signature verification using certificate '{}'", cert.getSubjectX500Principal().getName());
+      for (final PublicKey key : keys) {
+        log.trace("Attempting DCC signature verification using public key '{}'", key);
 
         try {
-          coseObject.verifySignature(cert.getPublicKey());
-          log.debug("DCC signature verification succeeded using certificate '{}'", cert.getSubjectX500Principal().getName());
+          coseObject.verifySignature(key);
+          log.debug("DCC signature verification succeeded using public key '{}'", key);
 
           // OK, before we are done - let's ensure that the HCERT hasn't expired.
           final Cwt cwt = coseObject.getCwt();
@@ -82,14 +82,14 @@ public class DefaultDGCSignatureVerifier implements DGCSignatureVerifier {
             throw new SignatureException("No DCC payload available in CWT");
           }
 
-          return new DGCSignatureVerifier.Result(dgcPayload, cert, kid, country, cwt.getIssuedAt(), cwt.getExpiration());
+          return new DGCSignatureVerifier.Result(dgcPayload, key, kid, country, cwt.getIssuedAt(), cwt.getExpiration());
         }
         catch (CBORException | SignatureException e) {
-          log.info("DGC signature verification failed using certificate '{}' - {}",
-            cert.getSubjectX500Principal().getName(), e.getMessage(), e);
+          log.trace("DGC signature verification failed using public key '{}' - {}",
+            key, e.getMessage(), e);
         }
       }
-      if (certs.isEmpty()) {
+      if (keys.isEmpty()) {
         throw new SignatureException("No signer certificates could be found");
       }
       else {
@@ -104,7 +104,7 @@ public class DefaultDGCSignatureVerifier implements DGCSignatureVerifier {
 
   /**
    * Gets the current time.
-   * 
+   *
    * @return the current time
    */
   private Instant getNow() {
@@ -117,7 +117,7 @@ public class DefaultDGCSignatureVerifier implements DGCSignatureVerifier {
 
   /**
    * For test only: Simulates the current validation time.
-   * 
+   *
    * @param testValidationTime
    *          simulated "now"
    */

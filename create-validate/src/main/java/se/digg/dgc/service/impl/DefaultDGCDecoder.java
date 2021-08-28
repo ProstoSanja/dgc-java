@@ -27,7 +27,7 @@ import se.digg.dgc.signatures.impl.DefaultDGCSignatureVerifier;
 
 /**
  * A bean implementing the {@link DGCDecoder} interface.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
@@ -45,7 +45,7 @@ public class DefaultDGCDecoder implements DGCDecoder {
 
   /**
    * Constructor.
-   * 
+   *
    * @param dgcSignatureVerifier
    *          the signature verifier - if null, an instance of {@link DefaultDGCSignatureVerifier} will be used
    * @param certificateProvider
@@ -59,25 +59,25 @@ public class DefaultDGCDecoder implements DGCDecoder {
     this.certificateProvider = Optional.ofNullable(certificateProvider)
       .orElseThrow(() -> new IllegalArgumentException("certificateProvider must be supplied"));
   }
-  
+
   /** {@inheritDoc} */
   @Override
-  public DigitalCovidCertificate decode(final String base45) 
+  public DigitalCovidCertificate decode(final String base45)
       throws DGCSchemaException, SignatureException, CertificateExpiredException, IOException {
 
     final byte[] dccEncoding = this.decodeToBytes(base45);
-    
+
     log.trace("CBOR decoding DCC ...");
-    final DigitalCovidCertificate dcc = DigitalCovidCertificate.decode(dccEncoding); 
+    final DigitalCovidCertificate dcc = DigitalCovidCertificate.decode(dccEncoding);
     log.trace("Decoded into: {}", dcc);
-    
+
     return dcc;
   }
 
   /** {@inheritDoc} */
   @Override
   public byte[] decodeToBytes(final String base45) throws SignatureException, CertificateExpiredException, IOException {
-        
+
     // Strip header ...
     //
     String input = base45;
@@ -107,7 +107,7 @@ public class DefaultDGCDecoder implements DGCDecoder {
     // OK, we now have the uncompressed CWT, lets verify it ...
     return this.decodeRawToBytes(cwt);
   }
-  
+
   /** {@inheritDoc} */
   @Override
   public DigitalCovidCertificate decodeRaw(final byte[] cwt)
@@ -132,9 +132,7 @@ public class DefaultDGCDecoder implements DGCDecoder {
 
       log.debug("Successful signature validation of signed CWT. dgc-length='{}', issuing-country='{}', issued-at='{}', expires='{}'",
         result.getDgcPayload().length, result.getCountry(), result.getIssuedAt(), result.getExpires());
-      log.trace("Subject DN of certificate used to verify signature: {}", result.getSignerCertificate()
-        .getSubjectX500Principal()
-        .toString());
+      log.trace("Public key used to verify signature: {}", result.getSignerPublicKey());
 
       return result.getDgcPayload();
     }

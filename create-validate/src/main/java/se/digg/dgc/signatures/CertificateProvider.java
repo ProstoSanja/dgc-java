@@ -1,16 +1,16 @@
 /*
  * MIT License
- * 
+ *
  * Copyright 2021 Myndigheten för digital förvaltning (DIGG)
  */
 package se.digg.dgc.signatures;
 
-import java.security.cert.X509Certificate;
+import java.security.PublicKey;
 import java.util.List;
 
 /**
  * A functional interface for finding certificates that may be used to verify the signature of a DCC.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
@@ -29,13 +29,13 @@ public interface CertificateProvider {
    * <p>
    * If the country code is {@code null} the provider should return all certificates matching the key identifier.
    * </p>
-   * 
+   *
    * @param country
    *          the two-letter country code
    * @param kid
    *          the key identifier
    * @return a list of certificates (never null)
    */
-  List<X509Certificate> getCertificates(final String country, final byte[] kid);
+  List<PublicKey> getCertificates(final String country, final byte[] kid);
 
 }

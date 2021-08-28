@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
@@ -50,7 +51,7 @@ import se.digg.dgc.signatures.impl.DefaultDGCSignatureVerifier;
 /**
  * Verifier support for testdata collected from <a href=
  * "https://github.com/eu-digital-green-certificates/dgc-testdata">https://github.com/eu-digital-green-certificates/dgc-testdata</a>.
- * 
+ *
  * @author Martin Lindström (martin@idsec.se)
  * @author Henrik Bengtsson (extern.henrik.bengtsson@digg.se)
  * @author Henric Norlander (extern.henric.norlander@digg.se)
@@ -70,7 +71,7 @@ public class DGCTestDataVerifier {
 
   /**
    * Validates the data from the test statement.
-   * 
+   *
    * @param testName
    *          the name of the test
    * @param test
@@ -108,7 +109,7 @@ public class DGCTestDataVerifier {
     if (test.getExpectedResults().expectedUnprefix != null) {
       validatePrefix(testName, test.getExpectedResults().expectedUnprefix, test.getPrefix(), test.getBase45());
     }
-    
+
     if (test.getExpectedResults().expectedCompression != null) {
       validateDecompress(testName, test.getExpectedResults().expectedCompression, test.getCompressedBytes(), test.getCoseBytes());
     }
@@ -127,7 +128,7 @@ public class DGCTestDataVerifier {
         || test.getExpectedResults().expectedVerify != null) {
       validateExpirationAndSignature(testName, test.getExpectedResults().expectedExpirationCheck,
         test.getExpectedResults().expectedVerify, test.getCoseBytes(),
-        test.getTestCtx().getValidationClockInstant(), test.getTestCtx().getCertificateObject());
+        test.getTestCtx().getValidationClockInstant(), test.getTestCtx().getCertificateObject().getPublicKey());
     }
 
     // 6. Extract the CBOR content and validate the CBOR content against the RAW CBOR content field.
@@ -163,7 +164,7 @@ public class DGCTestDataVerifier {
 
   /**
    * Validates test number 1: Load the picture and extract the prefixed BASE45content.
-   * 
+   *
    * @param testName
    *          name of test
    * @param expectedResult
@@ -204,7 +205,7 @@ public class DGCTestDataVerifier {
   /**
    * Validates test number 2: Load Prefix Object from RAW Content and remove the prefix. Validate against the BASE45 raw
    * content.
-   * 
+   *
    * @param testName
    *          name of test
    * @param expectedResult
@@ -239,7 +240,7 @@ public class DGCTestDataVerifier {
 
   /**
    * Validates that decompression works.
-   * 
+   *
    * @param testName
    *          name of test
    * @param expectedResult
@@ -274,7 +275,7 @@ public class DGCTestDataVerifier {
   /**
    * Validates test number 3: Decode the BASE45 RAW Content and validate the COSE content against the RAW content.
    * TODO: will change
-   * 
+   *
    * @param testName
    *          name of test
    * @param expectedResult
@@ -289,16 +290,16 @@ public class DGCTestDataVerifier {
     Assert.assertNotNull(String.format("[%s]: Can not execute Base45 decode test - Missing BASE45", testName), base45);
     if (cose == null && compressed == null) {
       Assert.fail(String.format("[%s]: Can not execute Base45 decode test - Missing both COSE and COMPRESSED", testName));
-    }    
+    }
 
     try {
       final byte[] decoded = Base45.getDecoder().decode(base45);
-      
+
       if (compressed != null) {
         Assert.assertArrayEquals(String.format("[%s]: Base45 decode and test failed", testName),
           compressed, decoded);
       }
-      else if (cose != null) {      
+      else if (cose != null) {
         final byte[] decompressed = Zlib.decompress(decoded, true);
 
         Assert.assertArrayEquals(String.format("[%s]: Base45 decode and decompress test failed", testName),
@@ -319,7 +320,7 @@ public class DGCTestDataVerifier {
   /**
    * Validates test number 4: Check the EXP Field for expiring against the VALIDATIONCLOCK time and test number 5:
    * Verify the signature of the COSE Object against the JWK Public Key.
-   * 
+   *
    * @param testName
    *          test name
    * @param expectedExpirationCheck
@@ -334,7 +335,7 @@ public class DGCTestDataVerifier {
    *          signer's certificate
    */
   public static void validateExpirationAndSignature(final String testName, final Boolean expectedExpirationCheck,
-      final Boolean expectedSignatureCheck, final byte[] cose, final Instant validationClock, final X509Certificate signerCertificate) {
+      final Boolean expectedSignatureCheck, final byte[] cose, final Instant validationClock, final PublicKey signerCertificate) {
 
     Assert.assertNotNull(String.format("[%s]: Can not execute COSE verify test - Missing COSE", testName), cose);
 
@@ -350,7 +351,7 @@ public class DGCTestDataVerifier {
 
       try {
         final DGCSignatureVerifier.Result vResult = verifier.verify(cose, certProvider);
-        
+
         if (!expectedSignatureCheck.booleanValue()) {
           Assert.fail(String.format("[%s]: Signature validation was successful but expected failure", testName));
         }
@@ -360,11 +361,11 @@ public class DGCTestDataVerifier {
         if (expectedExpirationCheck != null && vResult.getExpires() == null) {
           Assert.fail(String.format("[%s]: Expiration check failed - Missing expiration field in CWT", testName));
         }
-        
+
         // Check kid
         final byte[] kid = vResult.getKid();
         if (kid != null) {
-          final byte[] expectedKid = calculateKid(vResult.getSignerCertificate());
+          final byte[] expectedKid = calculateKid(vResult.getSignerPublicKey());
           Assert.assertArrayEquals(String.format("[%s]: KID does not correspond with certificate", testName),
             expectedKid, kid);
         }
@@ -406,7 +407,7 @@ public class DGCTestDataVerifier {
 
   /**
    * Validates test number 6: Extract the CBOR content and validate the CBOR content against the RAW CBOR content field.
-   * 
+   *
    * @param testName
    *          test name
    * @param expected
@@ -446,7 +447,7 @@ public class DGCTestDataVerifier {
 
   /**
    * Validates test number 7: Transform CBOR into JSON and validate against the RAW JSON content.
-   * 
+   *
    * @param testName
    *          test name
    * @param expected
@@ -512,15 +513,15 @@ public class DGCTestDataVerifier {
         jsonNormalized, cborNormalizedJson);
     }
   }
-  
+
   /**
    * Given a certificate a 8-byte KID is calculated that is the SHA-256 digest over the certificate DER-encoding.
-   * 
+   *
    * @param cert
    *          the certificate
    * @return a 8 byte KID
-   */  
-  private static byte[] calculateKid(final X509Certificate cert) {
+   */
+  private static byte[] calculateKid(final PublicKey cert) {
 
     try {
       final MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -530,14 +531,14 @@ public class DGCTestDataVerifier {
       System.arraycopy(sha256, 0, kid, 0, 8);
       return kid;
     }
-    catch (NoSuchAlgorithmException | CertificateEncodingException e) {
+    catch (NoSuchAlgorithmException e) {
       throw new SecurityException(e);
     }
   }
 
   /**
    * Reads a test file.
-   * 
+   *
    * @param file
    *          the test file
    * @return a TestStatement
